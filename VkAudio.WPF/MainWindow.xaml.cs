@@ -1,4 +1,5 @@
 ﻿using VkAudio.WPF.Controls;
+using VkAudio.WPF.ViewModels;
 
 namespace VkAudio.WPF
 {
@@ -7,9 +8,14 @@ namespace VkAudio.WPF
     /// </summary>
     public partial class MainWindow : MaterialWindow
     {
-        public MainWindow()
+        public MainWindowViewModel ViewModel { get; }
+
+        public MainWindow(MainWindowViewModel viewModel)
         {
             InitializeComponent();
+
+            DataContext = viewModel;
+            ViewModel = viewModel;
         }
     }
 }

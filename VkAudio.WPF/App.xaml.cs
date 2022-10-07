@@ -5,6 +5,7 @@ using NLog.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Windows;
+using VkAudio.WPF.ViewModels;
 
 namespace VkAudio.WPF
 {
