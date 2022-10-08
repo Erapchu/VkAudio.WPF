@@ -1,7 +1,7 @@
 ﻿using VkAudio.WPF.Controls;
 using VkAudio.WPF.ViewModels;
 
-namespace VkAudio.WPF
+namespace VkAudio.WPF.Views
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

@@ -6,6 +6,7 @@ using System;
 using System.Threading;
 using System.Windows;
 using VkAudio.WPF.ViewModels;
+using VkAudio.WPF.Views;
 
 namespace VkAudio.WPF
 {
