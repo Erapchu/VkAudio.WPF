@@ -6,7 +6,7 @@ namespace VkAudio.WPF.Views
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : MaterialWindow
+    internal partial class MainWindow : MaterialWindow
     {
         public MainWindowViewModel ViewModel { get; }
 
