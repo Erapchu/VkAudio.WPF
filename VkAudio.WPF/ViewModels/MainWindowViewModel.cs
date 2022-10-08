@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Threading.Tasks;
+using VkAudio.WPF.Views.Helpers;
 
 namespace VkAudio.WPF.ViewModels
 {
@@ -22,7 +23,7 @@ namespace VkAudio.WPF.ViewModels
         [RelayCommand]
         private async Task Login()
         {
-
+            await MaterialInputBox.ShowAsync("Login to VK", "Login", "Password", DialogIdentifiers.MainWindowName);
         }
     }
 }

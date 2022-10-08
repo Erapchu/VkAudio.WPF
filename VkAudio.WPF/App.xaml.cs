@@ -56,6 +56,8 @@ namespace VkAudio.WPF
             // Windows
             services.AddScoped<MainWindow>();
             services.AddScoped<MainWindowViewModel>();
+            services.AddTransient<MaterialInputBoxContent>();
+            services.AddTransient<MaterialInputBoxViewModel>();
 
             return services.BuildServiceProvider();
         }
