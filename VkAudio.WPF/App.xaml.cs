@@ -5,8 +5,12 @@ using NLog.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Windows;
+using VkAudio.WPF.Settings;
 using VkAudio.WPF.ViewModels;
 using VkAudio.WPF.Views;
+using VkNet;
+using VkNet.Abstractions;
+using VkNet.AudioBypassService.Extensions;
 
 namespace VkAudio.WPF
 {
@@ -58,6 +62,13 @@ namespace VkAudio.WPF
             services.AddScoped<MainWindowViewModel>();
             services.AddTransient<MaterialInputBoxContent>();
             services.AddTransient<MaterialInputBoxViewModel>();
+
+            // Settings
+            services.AddSingleton<AppSettingsService>();
+
+            // VK
+            services.AddAudioBypass();
+            services.AddSingleton<IVkApi, VkApi>(sp => new VkApi(services));
 
             return services.BuildServiceProvider();
         }
