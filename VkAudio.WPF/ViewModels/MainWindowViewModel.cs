@@ -1,8 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows.Documents;
+using VkAudio.WPF.Collections;
 using VkAudio.WPF.Models;
 using VkAudio.WPF.Settings;
 using VkAudio.WPF.Views.Helpers;
@@ -28,6 +32,8 @@ namespace VkAudio.WPF.ViewModels
         private readonly IVkApi _vkApi;
         private readonly ILogger<MainWindowViewModel> _logger;
         private readonly AppSettingsService _appSettingsService;
+        
+        public ObservableCollectionDelayed<AudioViewModel> AudioViewModels { get; set; }
 
         private MainWindowViewModel()
         {
@@ -85,7 +91,21 @@ namespace VkAudio.WPF.ViewModels
                     {"owner_id", "67912281" },
                     {"need_blocks", "1" },
                 };
-                var getAudioResponse = _vkApi.Call("catalog.getAudio", parameters);
+                var getAudioResponse = await _vkApi.CallAsync("catalog.getAudio", parameters);
+                var audioRoot = JsonConvert.DeserializeObject<Root>(getAudioResponse.RawJson);
+
+                var audioVMs = new List<AudioViewModel>();
+                foreach (var audio in audioRoot.response.audios)
+                {
+                    audioVMs.Add(new AudioViewModel()
+                    {
+                        Title = audio.title,
+                        Url = audio.url
+                    });
+                }
+
+                AudioViewModels = new ObservableCollectionDelayed<AudioViewModel>(audioVMs);
+                OnPropertyChanged(nameof(AudioViewModels));
             }
             catch (Exception ex)
             {

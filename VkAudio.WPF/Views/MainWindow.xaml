@@ -47,12 +47,13 @@
                 Content="Log in"
                 WindowChrome.IsHitTestVisibleInChrome="True" />
             <Grid Grid.Row="1">
-                <ListView>
+                <ListView ItemsSource="{Binding AudioViewModels}">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn
                                 Width="{Binding ElementName=HelperField, Path=ActualWidth}"
                                 Header="Name"
+                                DisplayMemberBinding="{Binding Title}"
                                 HeaderContainerStyle="{StaticResource CommonColumnHeaderDisabledStyle}" />
                             <GridViewColumn
                                 x:Name="col2"
