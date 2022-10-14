@@ -10,5 +10,8 @@ namespace VkAudio.WPF.ViewModels
 
         [ObservableProperty]
         private string _title;
+
+        [ObservableProperty]
+        private string _artist;
     }
 }

@@ -140,12 +140,19 @@ namespace VkAudio.WPF.ViewModels
                 audioVMs.Add(new AudioViewModel()
                 {
                     Title = audio.title,
-                    Url = audio.url
+                    Url = audio.url,
+                    Artist = audio.artist,
                 });
             }
 
             AudioViewModels = new ObservableCollectionDelayed<AudioViewModel>(audioVMs);
             OnPropertyChanged(nameof(AudioViewModels));
+        }
+
+        [RelayCommand]
+        private async Task DownloadAudio(AudioViewModel audioViewModel)
+        {
+
         }
     }
 }

@@ -5,11 +5,12 @@
     xmlns:controls="clr-namespace:VkAudio.WPF.Controls"
     xmlns:conv="clr-namespace:VkAudio.WPF.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:helpers="clr-namespace:VkAudio.WPF.Views.Helpers"
+    xmlns:helpers="clr-namespace:VkAudio.WPF.Helpers"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:local="clr-namespace:VkAudio.WPF.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:vhelpers="clr-namespace:VkAudio.WPF.Views.Helpers"
     xmlns:vm="clr-namespace:VkAudio.WPF.ViewModels"
     Title="VK Audio"
     Width="800"
@@ -22,6 +23,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/VkAudio.WPF;component/Themes/DialogHostTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <helpers:BindingProxy x:Key="Proxy" Data="{Binding}" />
             <Style
                 x:Key="CommonColumnHeaderDisabledStyle"
                 BasedOn="{StaticResource {x:Type GridViewColumnHeader}}"
@@ -34,6 +36,33 @@
                 x:Key="InverseBooleanToVisibilityConverter"
                 FalseValue="Visible"
                 TrueValue="Collapsed" />
+            <DataTemplate x:Key="DetailsDataTemplate" DataType="{x:Type vm:AudioViewModel}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Image Source="{Binding }"/>
+                    <StackPanel>
+                        <TextBlock Text="{Binding Title}" />
+                        <TextBlock Opacity="0.5" Text="{Binding Artist}" />
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+            <DataTemplate x:Key="DownloadCellDataTemplate" DataType="{x:Type vm:AudioViewModel}">
+                <Button
+                    Margin="0 0 10 0"
+                    Command="{Binding Data.DownloadAudioCommand, Source={StaticResource Proxy}}"
+                    CommandParameter="{Binding}"
+                    Style="{StaticResource MaterialDesignFlatButton}">
+                    <md:PackIcon
+                        Width="20"
+                        Height="20"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Kind="Download" />
+                </Button>
+            </DataTemplate>
         </ResourceDictionary>
     </controls:MaterialWindow.Resources>
     <i:Interaction.Triggers>
@@ -43,7 +72,7 @@
     </i:Interaction.Triggers>
     <md:DialogHost
         CloseOnClickAway="False"
-        Identifier="{x:Static helpers:DialogIdentifiers.MainWindowName}"
+        Identifier="{x:Static vhelpers:DialogIdentifiers.MainWindowName}"
         Style="{StaticResource MaterialDesignEmbeddedFastDialogHost}">
         <Grid>
             <Grid.RowDefinitions>
@@ -84,12 +113,13 @@
                         <GridView>
                             <GridViewColumn
                                 Width="{Binding ElementName=HelperField, Path=ActualWidth}"
-                                DisplayMemberBinding="{Binding Title}"
+                                CellTemplate="{StaticResource DetailsDataTemplate}"
                                 Header="Name"
                                 HeaderContainerStyle="{StaticResource CommonColumnHeaderDisabledStyle}" />
                             <GridViewColumn
                                 x:Name="col2"
                                 Width="auto"
+                                CellTemplate="{StaticResource DownloadCellDataTemplate}"
                                 Header="Action"
                                 HeaderContainerStyle="{StaticResource CommonColumnHeaderDisabledStyle}" />
                         </GridView>
@@ -108,9 +138,9 @@
                     Margin="0 0 32 32"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
+                    Command="{Binding RefreshAudioCommand}"
                     Content="{md:PackIcon Kind=Refresh, Size=24}"
-                    Style="{StaticResource MaterialDesignFloatingActionSecondaryButton}"
-                    Command="{Binding RefreshAudioCommand}"/>
+                    Style="{StaticResource MaterialDesignFloatingActionSecondaryButton}" />
             </Grid>
         </Grid>
     </md:DialogHost>
