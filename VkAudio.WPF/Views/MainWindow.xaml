@@ -1,19 +1,21 @@
 ﻿<controls:MaterialWindow
     x:Class="VkAudio.WPF.Views.MainWindow"
-    x:ClassModifier="internal"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:VkAudio.WPF.Controls"
+    xmlns:conv="clr-namespace:VkAudio.WPF.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:helpers="clr-namespace:VkAudio.WPF.Views.Helpers"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:local="clr-namespace:VkAudio.WPF.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:vm="clr-namespace:VkAudio.WPF.ViewModels"
-    Title="MainWindow"
+    Title="VK Audio"
     Width="800"
     Height="450"
-    d:DataContext="{x:Static vm:MainWindowViewModel.DesignTimeInstance}"
+    d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel, IsDesignTimeCreatable=False}"
+    x:ClassModifier="internal"
     mc:Ignorable="d">
     <controls:MaterialWindow.Resources>
         <ResourceDictionary>
@@ -27,33 +29,63 @@
                 <Setter Property="IsEnabled" Value="False" />
                 <Setter Property="md:DataGridAssist.ColumnHeaderPadding" Value="8" />
             </Style>
+            <conv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <conv:BooleanToVisibilityConverter
+                x:Key="InverseBooleanToVisibilityConverter"
+                FalseValue="Visible"
+                TrueValue="Collapsed" />
         </ResourceDictionary>
     </controls:MaterialWindow.Resources>
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
     <md:DialogHost
         CloseOnClickAway="False"
         Identifier="{x:Static helpers:DialogIdentifiers.MainWindowName}"
         Style="{StaticResource MaterialDesignEmbeddedFastDialogHost}">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" MinHeight="26" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Button
+            <Grid
                 Margin="0 8 150 0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
-                md:ButtonAssist.CornerRadius="15"
-                Command="{Binding LoginCommand}"
-                Content="Log in"
-                WindowChrome.IsHitTestVisibleInChrome="True" />
+                WindowChrome.IsHitTestVisibleInChrome="True">
+                <StackPanel Orientation="Horizontal" Visibility="{Binding IsAuthorized, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock
+                        Margin="0 0 16 0"
+                        VerticalAlignment="Center"
+                        Text="{Binding UserName}" />
+                    <md:PopupBox>
+                        <md:PopupBox.ToggleContent>
+                            <Ellipse Width="48" Height="48">
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="{Binding Photo100}" Stretch="UniformToFill" />
+                                </Ellipse.Fill>
+                            </Ellipse>
+                        </md:PopupBox.ToggleContent>
+                        <Button Command="{Binding LogoutCommand}" Content="Logout" />
+                    </md:PopupBox>
+                </StackPanel>
+                <md:PopupBox Visibility="{Binding IsAuthorized, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                    <md:PopupBox.ToggleContent>
+                        <md:PackIcon Foreground="{DynamicResource MaterialDesignBody}" Kind="Account" />
+                    </md:PopupBox.ToggleContent>
+                    <Button Command="{Binding LoginCommand}" Content="Login" />
+                </md:PopupBox>
+            </Grid>
             <Grid Grid.Row="1">
                 <ListView ItemsSource="{Binding AudioViewModels}">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn
                                 Width="{Binding ElementName=HelperField, Path=ActualWidth}"
-                                Header="Name"
                                 DisplayMemberBinding="{Binding Title}"
+                                Header="Name"
                                 HeaderContainerStyle="{StaticResource CommonColumnHeaderDisabledStyle}" />
                             <GridViewColumn
                                 x:Name="col2"
@@ -68,9 +100,17 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="{Binding ElementName=col2, Path=ActualWidth}" />
+                        <ColumnDefinition Width="50" />
                     </Grid.ColumnDefinitions>
                     <Grid x:Name="HelperField" Grid.Column="0" />
                 </Grid>
+                <Button
+                    Margin="0 0 32 32"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Content="{md:PackIcon Kind=Refresh, Size=24}"
+                    Style="{StaticResource MaterialDesignFloatingActionSecondaryButton}"
+                    Command="{Binding RefreshAudioCommand}"/>
             </Grid>
         </Grid>
     </md:DialogHost>

@@ -19,6 +19,12 @@ namespace VkAudio.WPF.Settings
             set => Settings.Token = value;
         }
 
+        public long UserId
+        {
+            get => Settings.UserId;
+            set => Settings.UserId = value;
+        }
+
         public AppSettingsService(ILogger<AppSettingsService> logger)
         {
             _logger = logger;
