@@ -22,7 +22,9 @@
                             x:Name="PART_ContentCoverGrid"
                             Background="Transparent"
                             Focusable="False"
-                            IsHitTestVisible="False" />
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed">
+                        </Grid>
                         <Grid
                             x:Name="PART_Popup"
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
@@ -169,6 +171,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsOpen" Value="True">
                             <Setter TargetName="PART_ContentCoverGrid" Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="PART_ContentCoverGrid" Property="Visibility" Value="Visible" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
