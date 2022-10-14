@@ -109,6 +109,9 @@ namespace VkAudio.WPF.ViewModels
                     AccessToken = token
                 };
                 await _vkApi.AuthorizeAsync(apiAuthParams);
+
+                _ = RefreshAudioCommand.ExecuteAsync(null);
+
                 var userInfo = await _vkApi.Users.GetAsync(new[] { _appSettingsService.UserId }, ProfileFields.Photo100 | ProfileFields.FirstName | ProfileFields.LastName);
                 if (userInfo is not null && userInfo.Count != 0)
                 {
@@ -116,8 +119,6 @@ namespace VkAudio.WPF.ViewModels
                     Photo100 = currentUser.Photo100;
                     UserName = currentUser.FirstName + " " + currentUser.LastName;
                 }
-
-                await RefreshAudioCommand.ExecuteAsync(null);
             }
         }
 
