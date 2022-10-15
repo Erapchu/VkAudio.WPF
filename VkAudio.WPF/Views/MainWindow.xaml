@@ -39,10 +39,9 @@
             <DataTemplate x:Key="DetailsDataTemplate" DataType="{x:Type vm:AudioViewModel}">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="auto" />
                     </Grid.ColumnDefinitions>
-                    <Image Source="{Binding }"/>
                     <StackPanel>
                         <TextBlock Text="{Binding Title}" />
                         <TextBlock Opacity="0.5" Text="{Binding Artist}" />
@@ -100,12 +99,11 @@
                         <Button Command="{Binding LogoutCommand}" Content="Logout" />
                     </md:PopupBox>
                 </StackPanel>
-                <md:PopupBox Visibility="{Binding IsAuthorized, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
-                    <md:PopupBox.ToggleContent>
-                        <md:PackIcon Foreground="{DynamicResource MaterialDesignBody}" Kind="Account" />
-                    </md:PopupBox.ToggleContent>
-                    <Button Command="{Binding LoginCommand}" Content="Login" />
-                </md:PopupBox>
+                <Button
+                    Command="{Binding LoginCommand}"
+                    Content="{md:PackIcon Kind=Account}"
+                    Style="{StaticResource MaterialDesignPaperButton}"
+                    Visibility="{Binding IsAuthorized, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
             </Grid>
             <Grid Grid.Row="1">
                 <ListView ItemsSource="{Binding AudioViewModels}">

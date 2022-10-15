@@ -5,8 +5,8 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using VkAudio.WPF.Collections;
 using VkAudio.WPF.Enums;
 using VkAudio.WPF.Models;
 using VkAudio.WPF.Settings;
@@ -37,7 +37,7 @@ namespace VkAudio.WPF.ViewModels
         [ObservableProperty]
         private string _userName;
 
-        public ObservableCollectionDelayed<AudioViewModel> AudioViewModels { get; set; }
+        public ObservableCollection<AudioViewModel> AudioViewModels { get; set; } = new ObservableCollection<AudioViewModel>();
 
         private MainWindowViewModel()
         {
@@ -96,6 +96,7 @@ namespace VkAudio.WPF.ViewModels
                 _appSettingsService.UserId = 0;
                 _appSettingsService.Token = null;
                 await _appSettingsService.Save();
+                AudioViewModels.Clear();
             }
             catch (Exception ex)
             {
@@ -160,7 +161,7 @@ namespace VkAudio.WPF.ViewModels
                     });
                 }
 
-                AudioViewModels = new ObservableCollectionDelayed<AudioViewModel>(audioVMs);
+                AudioViewModels = new ObservableCollection<AudioViewModel>(audioVMs);
                 OnPropertyChanged(nameof(AudioViewModels));
             }
             catch (Exception ex)
@@ -175,14 +176,15 @@ namespace VkAudio.WPF.ViewModels
             var ffmpegNotFound = false;
             try
             {
-                var mediaInfo = await FFmpeg.GetMediaInfo(audioViewModel.Url);
-                var conversion = await FFmpeg.Conversions.FromSnippet.ExtractAudio(mediaInfo.Path, "C:\\Users\\Andrey\\Desktop\\test.mp3");
+                var parameters = $"-protocol_whitelist file,http,https,tcp,tls,crypto -i \"{audioViewModel.Url}\" \"C:\\Users\\Andrey\\Desktop\\index.mp3\"";
+                var conversion = FFmpeg.Conversions
+                    .New()
+                    .UseMultiThread(Environment.ProcessorCount);
                 conversion.OnProgress += async (sender, args) =>
                 {
                     await Console.Out.WriteLineAsync($"[{args.Duration}/{args.TotalLength}][{args.Percent}%]");
                 };
-
-                await conversion.SetOutputFormat(Format.mp3).Start();
+                await conversion.Start();
             }
             catch (FFmpegNotFoundException ffnfe)
             {
