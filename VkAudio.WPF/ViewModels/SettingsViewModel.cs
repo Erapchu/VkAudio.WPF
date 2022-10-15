@@ -32,7 +32,7 @@ namespace VkAudio.WPF.ViewModels
             if (DialogHost.IsDialogOpen(DialogIdentifiers.MainWindowName))
             {
                 if (_appSettingsService.DefaultSavePath != DefaultSavePath
-                    && _appSettingsService.FFmpegPath != FfmpegPath)
+                    || _appSettingsService.FFmpegPath != FfmpegPath)
                 {
                     _appSettingsService.DefaultSavePath = DefaultSavePath;
                     _appSettingsService.FFmpegPath = FfmpegPath;
