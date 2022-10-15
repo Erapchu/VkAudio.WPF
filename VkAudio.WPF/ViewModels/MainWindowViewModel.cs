@@ -208,7 +208,8 @@ namespace VkAudio.WPF.ViewModels
                     .UseMultiThread(Environment.ProcessorCount);
                 conversion.OnProgress += (sender, args) =>
                 {
-                    audioViewModel.Percent = args.Percent;
+                    if (args.Percent <= 100)
+                        audioViewModel.Percent = args.Percent;
                 };
                 audioViewModel.IsDownloading = true;
                 audioViewModel.Percent = 0;
