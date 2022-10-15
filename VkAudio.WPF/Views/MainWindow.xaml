@@ -14,6 +14,7 @@
     xmlns:vm="clr-namespace:VkAudio.WPF.ViewModels"
     Title="VK Audio"
     Width="800"
+    Closed="MaterialWindow_Closed"
     Height="450"
     d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel, IsDesignTimeCreatable=False}"
     x:ClassModifier="internal"
@@ -51,7 +52,9 @@
             <DataTemplate x:Key="DownloadCellDataTemplate" DataType="{x:Type vm:AudioViewModel}">
                 <Button
                     Margin="0 0 10 0"
-                    Command="{Binding Data.DownloadAudioCommand, Source={StaticResource Proxy}}"
+                    md:ButtonProgressAssist.IsIndicatorVisible="{Binding IsDownloading}"
+                    md:ButtonProgressAssist.Value="{Binding Percent}"
+                    Command="{Binding DownloadAudioCommand}"
                     CommandParameter="{Binding}"
                     Style="{StaticResource MaterialDesignFlatButton}">
                     <md:PackIcon

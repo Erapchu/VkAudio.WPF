@@ -16,6 +16,12 @@ namespace VkAudio.WPF.Views
 
             DataContext = viewModel;
             ViewModel = viewModel;
+            ViewModel.IsActive = true;
+        }
+
+        private void MaterialWindow_Closed(object sender, System.EventArgs e)
+        {
+            ViewModel.IsActive = false;
         }
     }
 }

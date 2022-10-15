@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,7 @@ using System.IO;
 using System.Threading.Tasks;
 using VkAudio.WPF.Models;
 using VkAudio.WPF.Settings;
+using VkAudio.WPF.ViewModels.Messages;
 using VkAudio.WPF.Views;
 using VkAudio.WPF.Views.Helpers;
 using VkNet.Abstractions;
@@ -21,8 +23,8 @@ using Xabe.FFmpeg.Exceptions;
 
 namespace VkAudio.WPF.ViewModels
 {
-    [INotifyPropertyChanged]
-    internal partial class MainWindowViewModel
+    internal partial class MainWindowViewModel : ObservableRecipient,
+        IRecipient<DownloadAudioMessage>
     {
         private readonly IVkApi _vkApi;
         private readonly ILogger<MainWindowViewModel> _logger;
@@ -176,9 +178,9 @@ namespace VkAudio.WPF.ViewModels
             }
         }
 
-        [RelayCommand]
-        private async Task DownloadAudio(AudioViewModel audioViewModel)
+        public async void Receive(DownloadAudioMessage message)
         {
+            var audioViewModel = message.AudioViewModel;
             var ffmpegNotFound = false;
             try
             {
@@ -200,14 +202,16 @@ namespace VkAudio.WPF.ViewModels
                     return;
 
                 var savePath = Path.Combine(saveFolder, $"{audioViewModel.Artist} - {audioViewModel.Title}.mp3");
-                var parameters = $"-protocol_whitelist file,http,https,tcp,tls,crypto -i \"{audioViewModel.Url}\" \"{savePath}\"";
+                var parameters = $"-n -protocol_whitelist file,http,https,tcp,tls,crypto -i \"{audioViewModel.Url}\" \"{savePath}\"";
                 var conversion = FFmpeg.Conversions
                     .New()
                     .UseMultiThread(Environment.ProcessorCount);
-                conversion.OnProgress += async (sender, args) =>
+                conversion.OnProgress += (sender, args) =>
                 {
-                    await Console.Out.WriteLineAsync($"[{args.Duration}/{args.TotalLength}][{args.Percent}%]");
+                    audioViewModel.Percent = args.Percent;
                 };
+                audioViewModel.IsDownloading = true;
+                audioViewModel.Percent = 0;
                 await conversion.Start(parameters);
             }
             catch (FFmpegNotFoundException ffnfe)
@@ -218,6 +222,10 @@ namespace VkAudio.WPF.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, null);
+            }
+            finally
+            {
+                audioViewModel.IsDownloading = false;
             }
 
             if (ffmpegNotFound)
@@ -238,6 +246,20 @@ namespace VkAudio.WPF.ViewModels
         {
             var settingsView = _serviceProvider.GetService<SettingsView>();
             var result = await DialogHost.Show(settingsView, DialogIdentifiers.MainWindowName);
+        }
+
+        protected override void OnActivated()
+        {
+            base.OnActivated();
+
+            StrongReferenceMessenger.Default.Register<DownloadAudioMessage>(this);
+        }
+
+        protected override void OnDeactivated()
+        {
+            base.OnDeactivated();
+
+            StrongReferenceMessenger.Default.Unregister<DownloadAudioMessage>(this);
         }
     }
 }
