@@ -62,6 +62,8 @@ namespace VkAudio.WPF
             services.AddScoped<MainWindowViewModel>();
             services.AddTransient<MaterialInputBoxContent>();
             services.AddTransient<MaterialInputBoxViewModel>();
+            services.AddTransient<SettingsView>();
+            services.AddTransient<SettingsViewModel>();
 
             // Settings
             services.AddSingleton<AppSettingsService>();

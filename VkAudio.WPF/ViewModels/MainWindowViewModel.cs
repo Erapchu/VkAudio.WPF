@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MaterialDesignThemes.Wpf;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -27,7 +28,7 @@ namespace VkAudio.WPF.ViewModels
         private readonly IVkApi _vkApi;
         private readonly ILogger<MainWindowViewModel> _logger;
         private readonly AppSettingsService _appSettingsService;
-
+        private readonly IServiceProvider _serviceProvider;
         [ObservableProperty]
         private bool _isAuthorized;
 
@@ -46,11 +47,13 @@ namespace VkAudio.WPF.ViewModels
         public MainWindowViewModel(
             IVkApi vkApi,
             ILogger<MainWindowViewModel> logger,
-            AppSettingsService appSettingsService)
+            AppSettingsService appSettingsService,
+            IServiceProvider serviceProvider)
         {
             _vkApi = vkApi;
             _logger = logger;
             _appSettingsService = appSettingsService;
+            _serviceProvider = serviceProvider;
         }
 
         [RelayCommand]
@@ -228,6 +231,13 @@ namespace VkAudio.WPF.ViewModels
                     }
                 }
             }
+        }
+
+        [RelayCommand]
+        private async Task OpenSettings()
+        {
+            var settingsView = _serviceProvider.GetService<SettingsView>();
+            var result = await DialogHost.Show(settingsView, DialogIdentifiers.MainWindowName);
         }
     }
 }

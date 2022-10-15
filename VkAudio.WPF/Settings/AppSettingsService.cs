@@ -25,6 +25,18 @@ namespace VkAudio.WPF.Settings
             set => Settings.UserId = value;
         }
 
+        public string FFmpegPath
+        {
+            get => Settings.FFmpegPath;
+            set => Settings.FFmpegPath = value;
+        }
+
+        public string DefaultSavePath
+        {
+            get => Settings.DefaultSavePath;
+            set => Settings.DefaultSavePath = value;
+        }
+
         public AppSettingsService(ILogger<AppSettingsService> logger)
         {
             _logger = logger;

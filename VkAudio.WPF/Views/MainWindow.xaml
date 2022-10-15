@@ -83,7 +83,25 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 WindowChrome.IsHitTestVisibleInChrome="True">
-                <StackPanel Orientation="Horizontal" Visibility="{Binding IsAuthorized, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Margin="0 0 16 0" Orientation="Horizontal">
+                    <Button
+                        Margin="0 0 8 0"
+                        Command="{Binding OpenSettingsCommand}"
+                        Content="{md:PackIcon Kind=Settings}"
+                        Style="{StaticResource MaterialDesignIconForegroundButton}" />
+                    <Button
+                        Command="{Binding RefreshAudioCommand}"
+                        Content="{md:PackIcon Kind=Refresh}"
+                        Style="{StaticResource MaterialDesignIconForegroundButton}" />
+                </StackPanel>
+                <StackPanel
+                    Grid.Column="1"
+                    Orientation="Horizontal"
+                    Visibility="{Binding IsAuthorized, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TextBlock
                         Margin="0 0 16 0"
                         VerticalAlignment="Center"
@@ -100,6 +118,7 @@
                     </md:PopupBox>
                 </StackPanel>
                 <Button
+                    Grid.Column="1"
                     Command="{Binding LoginCommand}"
                     Content="{md:PackIcon Kind=Account}"
                     Style="{StaticResource MaterialDesignPaperButton}"
@@ -128,17 +147,10 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="{Binding ElementName=col2, Path=ActualWidth}" />
-                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="100" />
                     </Grid.ColumnDefinitions>
                     <Grid x:Name="HelperField" Grid.Column="0" />
                 </Grid>
-                <Button
-                    Margin="0 0 32 32"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Bottom"
-                    Command="{Binding RefreshAudioCommand}"
-                    Content="{md:PackIcon Kind=Refresh, Size=24}"
-                    Style="{StaticResource MaterialDesignFloatingActionSecondaryButton}" />
             </Grid>
         </Grid>
     </md:DialogHost>
