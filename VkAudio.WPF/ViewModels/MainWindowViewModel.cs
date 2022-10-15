@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using VkAudio.WPF.Enums;
 using VkAudio.WPF.Models;
 using VkAudio.WPF.Settings;
 using VkAudio.WPF.Views;
@@ -17,7 +16,6 @@ using VkNet.Abstractions;
 using VkNet.Enums.Filters;
 using VkNet.Model;
 using Xabe.FFmpeg;
-using Xabe.FFmpeg.Downloader;
 using Xabe.FFmpeg.Exceptions;
 
 namespace VkAudio.WPF.ViewModels
@@ -201,35 +199,14 @@ namespace VkAudio.WPF.ViewModels
 
             if (ffmpegNotFound)
             {
-                var ffmpegChoiceView = new FfmpegChoiceView() { DataContext = new FfmpegChoiceViewModel() };
-                var result = await DialogHost.Show(ffmpegChoiceView, DialogIdentifiers.MainWindowName);
-                if (result is FfmpegChoiceEnum ffmpegChoice)
-                {
-                    var dialog = new Ookii.Dialogs.Wpf.VistaFolderBrowserDialog();
-                    dialog.UseDescriptionForTitle = true;
-                    if (ffmpegChoice == FfmpegChoiceEnum.Download)
-                        dialog.Description = "Download";
-                    else
-                        dialog.Description = "Set path to executables";
-                    var dialogResult = dialog.ShowDialog();
-                    if (dialogResult == true)
-                    {
-                        var selectedPath = dialog.SelectedPath;
-                        switch (ffmpegChoice)
-                        {
-                            case FfmpegChoiceEnum.SetPath:
-                                {
-                                    FFmpeg.SetExecutablesPath(selectedPath);
-                                    break;
-                                }
-                            case FfmpegChoiceEnum.Download:
-                                {
-                                    await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, selectedPath);
-                                    break;
-                                }
-                        }
-                    }
-                }
+                var result = await MaterialMessageBox.ShowAsync(
+                    "FFmpeg exception",
+                    "FFmpeg executable files not found! Please, specify them in settings.",
+                    MaterialMessageBoxButtons.OK,
+                    DialogIdentifiers.MainWindowName,
+                    PackIconKind.Error);
+                //await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, selectedPath);
+                //FFmpeg.SetExecutablesPath(selectedPath);
             }
         }
 
