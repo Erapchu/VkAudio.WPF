@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading.Tasks;
 using VkAudio.WPF.Models;
 using VkAudio.WPF.Settings;
@@ -181,23 +182,24 @@ namespace VkAudio.WPF.ViewModels
             var ffmpegNotFound = false;
             try
             {
-                string savePath = null;
+                string saveFolder = null;
                 if (string.IsNullOrWhiteSpace(_appSettingsService.DefaultSavePath))
                 {
                     var dialog = new Ookii.Dialogs.Wpf.VistaFolderBrowserDialog();
                     dialog.UseDescriptionForTitle = true;
                     dialog.Description = "Save audio to";
                     var dialogResult = dialog.ShowDialog();
-                    savePath = dialog.SelectedPath;
+                    saveFolder = dialog.SelectedPath;
                 }
                 else
                 {
-                    savePath = _appSettingsService.DefaultSavePath;
+                    saveFolder = _appSettingsService.DefaultSavePath;
                 }
 
-                if (string.IsNullOrWhiteSpace(savePath))
+                if (string.IsNullOrWhiteSpace(saveFolder))
                     return;
 
+                var savePath = Path.Combine(saveFolder, $"{audioViewModel.Artist} - {audioViewModel.Title}.mp3");
                 var parameters = $"-protocol_whitelist file,http,https,tcp,tls,crypto -i \"{audioViewModel.Url}\" \"{savePath}\"";
                 var conversion = FFmpeg.Conversions
                     .New()
