@@ -42,5 +42,24 @@ namespace VkAudio.WPF.ViewModels
                 DialogHost.Close(DialogIdentifiers.MainWindowName);
             }
         }
+
+        [RelayCommand]
+        private void Cancel()
+        {
+            if (DialogHost.IsDialogOpen(DialogIdentifiers.MainWindowName))
+                DialogHost.Close(DialogIdentifiers.MainWindowName);
+        }
+
+        [RelayCommand]
+        private void SetFFmpegPath()
+        {
+
+        }
+
+        [RelayCommand]
+        private void SetDefaultSavePath()
+        {
+
+        }
     }
 }

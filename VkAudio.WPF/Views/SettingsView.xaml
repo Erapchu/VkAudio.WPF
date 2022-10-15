@@ -44,6 +44,7 @@
                 Margin="8 0 8 8"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
+                Command="{Binding SetFFmpegPathCommand}"
                 Content="{md:PackIcon Kind=Folder}"
                 Style="{StaticResource MaterialDesignFlatAccentButton}" />
             <TextBox
@@ -57,14 +58,26 @@
                 Margin="8 0 8 0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
+                Command="{Binding SetDefaultSavePathCommand}"
                 Content="{md:PackIcon Kind=Folder}"
                 Style="{StaticResource MaterialDesignFlatAccentButton}" />
         </Grid>
-        <Button
-            Grid.Row="2"
-            Command="{Binding ApplyCommand}"
-            Content="Apply"
-            IsDefault="True"
-            Style="{StaticResource MaterialDesignFlatButton}" />
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button
+                Command="{Binding ApplyCommand}"
+                Content="Apply"
+                IsDefault="True"
+                Style="{StaticResource MaterialDesignFlatButton}" />
+            <Button
+                Grid.Column="1"
+                Command="{Binding CancelCommand}"
+                Content="Cancel"
+                IsCancel="True"
+                Style="{StaticResource MaterialDesignFlatButton}" />
+        </Grid>
     </Grid>
 </UserControl>
