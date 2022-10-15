@@ -4,6 +4,7 @@ using MaterialDesignThemes.Wpf;
 using System.Threading.Tasks;
 using VkAudio.WPF.Settings;
 using VkAudio.WPF.Views.Helpers;
+using Xabe.FFmpeg;
 
 namespace VkAudio.WPF.ViewModels
 {
@@ -53,13 +54,30 @@ namespace VkAudio.WPF.ViewModels
         [RelayCommand]
         private void SetFFmpegPath()
         {
-
+            var dialog = new Ookii.Dialogs.Wpf.VistaFolderBrowserDialog();
+            dialog.UseDescriptionForTitle = true;
+            dialog.Description = "Set path to FFmpeg executables";
+            var dialogResult = dialog.ShowDialog();
+            if (dialogResult == true)
+            {
+                var selectedPath = dialog.SelectedPath;
+                FfmpegPath = selectedPath;
+                FFmpeg.SetExecutablesPath(selectedPath);
+            }
         }
 
         [RelayCommand]
         private void SetDefaultSavePath()
         {
-
+            var dialog = new Ookii.Dialogs.Wpf.VistaFolderBrowserDialog();
+            dialog.UseDescriptionForTitle = true;
+            dialog.Description = "Set path to default save folder";
+            var dialogResult = dialog.ShowDialog();
+            if (dialogResult == true)
+            {
+                var selectedPath = dialog.SelectedPath;
+                DefaultSavePath = selectedPath;
+            }
         }
     }
 }

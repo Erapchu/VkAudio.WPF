@@ -130,6 +130,10 @@ namespace VkAudio.WPF.ViewModels
                         UserName = currentUser.FirstName + " " + currentUser.LastName;
                     }
                 }
+
+                var ffmpegPath = _appSettingsService.FFmpegPath;
+                if (!string.IsNullOrWhiteSpace(ffmpegPath))
+                    FFmpeg.SetExecutablesPath(ffmpegPath);
             }
             catch (Exception ex)
             {
@@ -177,7 +181,24 @@ namespace VkAudio.WPF.ViewModels
             var ffmpegNotFound = false;
             try
             {
-                var parameters = $"-protocol_whitelist file,http,https,tcp,tls,crypto -i \"{audioViewModel.Url}\" \"C:\\Users\\Andrey\\Desktop\\index.mp3\"";
+                string savePath = null;
+                if (string.IsNullOrWhiteSpace(_appSettingsService.DefaultSavePath))
+                {
+                    var dialog = new Ookii.Dialogs.Wpf.VistaFolderBrowserDialog();
+                    dialog.UseDescriptionForTitle = true;
+                    dialog.Description = "Save audio to";
+                    var dialogResult = dialog.ShowDialog();
+                    savePath = dialog.SelectedPath;
+                }
+                else
+                {
+                    savePath = _appSettingsService.DefaultSavePath;
+                }
+
+                if (string.IsNullOrWhiteSpace(savePath))
+                    return;
+
+                var parameters = $"-protocol_whitelist file,http,https,tcp,tls,crypto -i \"{audioViewModel.Url}\" \"{savePath}\"";
                 var conversion = FFmpeg.Conversions
                     .New()
                     .UseMultiThread(Environment.ProcessorCount);
@@ -185,7 +206,7 @@ namespace VkAudio.WPF.ViewModels
                 {
                     await Console.Out.WriteLineAsync($"[{args.Duration}/{args.TotalLength}][{args.Percent}%]");
                 };
-                await conversion.Start();
+                await conversion.Start(parameters);
             }
             catch (FFmpegNotFoundException ffnfe)
             {

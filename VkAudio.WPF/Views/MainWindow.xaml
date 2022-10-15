@@ -87,19 +87,8 @@
                     <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel Margin="0 0 16 0" Orientation="Horizontal">
-                    <Button
-                        Margin="0 0 8 0"
-                        Command="{Binding OpenSettingsCommand}"
-                        Content="{md:PackIcon Kind=Settings}"
-                        Style="{StaticResource MaterialDesignIconForegroundButton}" />
-                    <Button
-                        Command="{Binding RefreshAudioCommand}"
-                        Content="{md:PackIcon Kind=Refresh}"
-                        Style="{StaticResource MaterialDesignIconForegroundButton}" />
-                </StackPanel>
                 <StackPanel
-                    Grid.Column="1"
+                    Margin="0 0 16 0"
                     Orientation="Horizontal"
                     Visibility="{Binding IsAuthorized, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TextBlock
@@ -116,6 +105,17 @@
                         </md:PopupBox.ToggleContent>
                         <Button Command="{Binding LogoutCommand}" Content="Logout" />
                     </md:PopupBox>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button
+                        Margin="0 0 8 0"
+                        Command="{Binding OpenSettingsCommand}"
+                        Content="{md:PackIcon Kind=Settings}"
+                        Style="{StaticResource MaterialDesignIconForegroundButton}" />
+                    <Button
+                        Command="{Binding RefreshAudioCommand}"
+                        Content="{md:PackIcon Kind=Refresh}"
+                        Style="{StaticResource MaterialDesignIconForegroundButton}" />
                 </StackPanel>
                 <Button
                     Grid.Column="1"
