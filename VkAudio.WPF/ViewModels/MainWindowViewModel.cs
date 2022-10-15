@@ -1,17 +1,23 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VkAudio.WPF.Collections;
+using VkAudio.WPF.Enums;
 using VkAudio.WPF.Models;
 using VkAudio.WPF.Settings;
+using VkAudio.WPF.Views;
 using VkAudio.WPF.Views.Helpers;
 using VkNet.Abstractions;
 using VkNet.Enums.Filters;
 using VkNet.Model;
+using Xabe.FFmpeg;
+using Xabe.FFmpeg.Downloader;
+using Xabe.FFmpeg.Exceptions;
 
 namespace VkAudio.WPF.ViewModels
 {
@@ -100,59 +106,126 @@ namespace VkAudio.WPF.ViewModels
         [RelayCommand]
         private async Task Loaded()
         {
-            var token = _appSettingsService.Token;
-            if (token is not null)
+            try
             {
-                IsAuthorized = true;
-                var apiAuthParams = new ApiAuthParams()
+                var token = _appSettingsService.Token;
+                if (token is not null)
                 {
-                    AccessToken = token
-                };
-                await _vkApi.AuthorizeAsync(apiAuthParams);
+                    IsAuthorized = true;
+                    var apiAuthParams = new ApiAuthParams()
+                    {
+                        AccessToken = token
+                    };
+                    await _vkApi.AuthorizeAsync(apiAuthParams);
 
-                _ = RefreshAudioCommand.ExecuteAsync(null);
+                    _ = RefreshAudioCommand.ExecuteAsync(null);
 
-                var userInfo = await _vkApi.Users.GetAsync(new[] { _appSettingsService.UserId }, ProfileFields.Photo100 | ProfileFields.FirstName | ProfileFields.LastName);
-                if (userInfo is not null && userInfo.Count != 0)
-                {
-                    var currentUser = userInfo[0];
-                    Photo100 = currentUser.Photo100;
-                    UserName = currentUser.FirstName + " " + currentUser.LastName;
+                    var userInfo = await _vkApi.Users.GetAsync(new[] { _appSettingsService.UserId }, ProfileFields.Photo100 | ProfileFields.FirstName | ProfileFields.LastName);
+                    if (userInfo is not null && userInfo.Count != 0)
+                    {
+                        var currentUser = userInfo[0];
+                        Photo100 = currentUser.Photo100;
+                        UserName = currentUser.FirstName + " " + currentUser.LastName;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, string.Empty);
             }
         }
 
         [RelayCommand]
         private async Task RefreshAudio()
         {
-            var parameters = new VkNet.Utils.VkParameters()
+            try
             {
-                {"v", "5.131" },
-                {"owner_id", _appSettingsService.UserId.ToString() },
-                {"need_blocks", "1" },
-            };
-            var getAudioResponse = await _vkApi.CallAsync("catalog.getAudio", parameters);
-            var audioRoot = JsonConvert.DeserializeObject<Root>(getAudioResponse.RawJson);
-
-            var audioVMs = new List<AudioViewModel>();
-            foreach (var audio in audioRoot.response.audios)
-            {
-                audioVMs.Add(new AudioViewModel()
+                var parameters = new VkNet.Utils.VkParameters()
                 {
-                    Title = audio.title,
-                    Url = audio.url,
-                    Artist = audio.artist,
-                });
-            }
+                    {"v", "5.131" },
+                    {"owner_id", _appSettingsService.UserId.ToString() },
+                    {"need_blocks", "1" },
+                };
+                var getAudioResponse = await _vkApi.CallAsync("catalog.getAudio", parameters);
+                var audioRoot = JsonConvert.DeserializeObject<Root>(getAudioResponse.RawJson);
 
-            AudioViewModels = new ObservableCollectionDelayed<AudioViewModel>(audioVMs);
-            OnPropertyChanged(nameof(AudioViewModels));
+                var audioVMs = new List<AudioViewModel>();
+                foreach (var audio in audioRoot.response.audios)
+                {
+                    audioVMs.Add(new AudioViewModel()
+                    {
+                        Title = audio.title,
+                        Url = audio.url,
+                        Artist = audio.artist,
+                    });
+                }
+
+                AudioViewModels = new ObservableCollectionDelayed<AudioViewModel>(audioVMs);
+                OnPropertyChanged(nameof(AudioViewModels));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, null);
+            }
         }
 
         [RelayCommand]
         private async Task DownloadAudio(AudioViewModel audioViewModel)
         {
+            var ffmpegNotFound = false;
+            try
+            {
+                var mediaInfo = await FFmpeg.GetMediaInfo(audioViewModel.Url);
+                var conversion = await FFmpeg.Conversions.FromSnippet.ExtractAudio(mediaInfo.Path, "C:\\Users\\Andrey\\Desktop\\test.mp3");
+                conversion.OnProgress += async (sender, args) =>
+                {
+                    await Console.Out.WriteLineAsync($"[{args.Duration}/{args.TotalLength}][{args.Percent}%]");
+                };
 
+                await conversion.SetOutputFormat(Format.mp3).Start();
+            }
+            catch (FFmpegNotFoundException ffnfe)
+            {
+                _logger.LogError(ffnfe, null);
+                ffmpegNotFound = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, null);
+            }
+
+            if (ffmpegNotFound)
+            {
+                var ffmpegChoiceView = new FfmpegChoiceView() { DataContext = new FfmpegChoiceViewModel() };
+                var result = await DialogHost.Show(ffmpegChoiceView, DialogIdentifiers.MainWindowName);
+                if (result is FfmpegChoiceEnum ffmpegChoice)
+                {
+                    var dialog = new Ookii.Dialogs.Wpf.VistaFolderBrowserDialog();
+                    dialog.UseDescriptionForTitle = true;
+                    if (ffmpegChoice == FfmpegChoiceEnum.Download)
+                        dialog.Description = "Download";
+                    else
+                        dialog.Description = "Set path to executables";
+                    var dialogResult = dialog.ShowDialog();
+                    if (dialogResult == true)
+                    {
+                        var selectedPath = dialog.SelectedPath;
+                        switch (ffmpegChoice)
+                        {
+                            case FfmpegChoiceEnum.SetPath:
+                                {
+                                    FFmpeg.SetExecutablesPath(selectedPath);
+                                    break;
+                                }
+                            case FfmpegChoiceEnum.Download:
+                                {
+                                    await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, selectedPath);
+                                    break;
+                                }
+                        }
+                    }
+                }
+            }
         }
     }
 }
