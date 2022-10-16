@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace VkAudio.WPF.Models
+namespace VkAudio.WPF.Models.Catalog.GetAudio
 {
     public class Action
     {
@@ -287,7 +287,7 @@ namespace VkAudio.WPF.Models
         public List<CatalogBanner> catalog_banners { get; set; }
     }
 
-    public class Root
+    public class GetAudioWrapper
     {
         public Response response { get; set; }
     }

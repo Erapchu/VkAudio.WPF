@@ -10,7 +10,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
-using VkAudio.WPF.Models;
+using VkAudio.WPF.Collections;
+using VkAudio.WPF.Models.Catalog.GetAudio;
+using VkAudio.WPF.Models.Catalog.GetSection;
 using VkAudio.WPF.Settings;
 using VkAudio.WPF.ViewModels.Messages;
 using VkAudio.WPF.Views;
@@ -30,6 +32,11 @@ namespace VkAudio.WPF.ViewModels
         private readonly ILogger<MainWindowViewModel> _logger;
         private readonly AppSettingsService _appSettingsService;
         private readonly IServiceProvider _serviceProvider;
+
+        private bool _audioRefreshed;
+        private string _nextFrom;
+        private string _blockId;
+
         [ObservableProperty]
         private bool _isAuthorized;
 
@@ -39,7 +46,10 @@ namespace VkAudio.WPF.ViewModels
         [ObservableProperty]
         private string _userName;
 
-        public ObservableCollection<AudioViewModel> AudioViewModels { get; set; } = new ObservableCollection<AudioViewModel>();
+        [ObservableProperty]
+        private bool _downloadingNext;
+
+        public ObservableCollectionDelayed<AudioViewModel> AudioViewModels { get; set; } = new ObservableCollectionDelayed<AudioViewModel>();
 
         private MainWindowViewModel()
         {
@@ -156,10 +166,10 @@ namespace VkAudio.WPF.ViewModels
                     {"need_blocks", "1" },
                 };
                 var getAudioResponse = await _vkApi.CallAsync("catalog.getAudio", parameters);
-                var audioRoot = JsonConvert.DeserializeObject<Root>(getAudioResponse.RawJson);
+                var getAudio = JsonConvert.DeserializeObject<GetAudioWrapper>(getAudioResponse.RawJson);
 
                 var audioVMs = new List<AudioViewModel>();
-                foreach (var audio in audioRoot.response.audios)
+                foreach (var audio in getAudio.response.audios)
                 {
                     audioVMs.Add(new AudioViewModel()
                     {
@@ -169,12 +179,62 @@ namespace VkAudio.WPF.ViewModels
                     });
                 }
 
-                AudioViewModels = new ObservableCollection<AudioViewModel>(audioVMs);
+                AudioViewModels = new ObservableCollectionDelayed<AudioViewModel>(audioVMs);
                 OnPropertyChanged(nameof(AudioViewModels));
+
+                var defaultSectionId = getAudio.response.catalog.default_section;
+                var musicBlock = getAudio.response.catalog.sections
+                    .Find(s => s.id == defaultSectionId && s.blocks?.Count > 0)
+                    ?.blocks.Find(b => b.data_type == "music_audios");
+                _nextFrom = musicBlock?.next_from;
+                _blockId = musicBlock?.id;
+                _audioRefreshed = true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, null);
+            }
+        }
+
+        [RelayCommand]
+        private async Task GetNextAudios()
+        {
+            try
+            {
+                if (DownloadingNext || !_audioRefreshed)
+                    return;
+
+                DownloadingNext = true;
+                var parameters = new VkNet.Utils.VkParameters()
+                {
+                    {"v", "5.131" },
+                    {"start_from", _nextFrom },
+                    {"section_id", _blockId },
+                };
+                var paginationResponse = await _vkApi.CallAsync("catalog.getSection", parameters);
+                var getSection = JsonConvert.DeserializeObject<GetSectionWrapper>(paginationResponse.RawJson);
+
+                _nextFrom = getSection.response.section.next_from;
+                _blockId = getSection.response.section.id;
+
+                using var delayed = AudioViewModels.DelayNotifications();
+                foreach (var audio in getSection.response.audios)
+                {
+                    delayed.Add(new AudioViewModel()
+                    {
+                        Title = audio.title,
+                        Url = audio.url,
+                        Artist = audio.artist,
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, null);
+            }
+            finally
+            {
+                DownloadingNext = false;
             }
         }
 

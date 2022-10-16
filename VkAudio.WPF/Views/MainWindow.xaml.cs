@@ -1,4 +1,5 @@
-﻿using VkAudio.WPF.Controls;
+﻿using System.Windows.Controls;
+using VkAudio.WPF.Controls;
 using VkAudio.WPF.ViewModels;
 
 namespace VkAudio.WPF.Views
@@ -22,6 +23,17 @@ namespace VkAudio.WPF.Views
         private void MaterialWindow_Closed(object sender, System.EventArgs e)
         {
             ViewModel.IsActive = false;
+        }
+
+        private void ListView_ScrollChanged(object sender, System.Windows.Controls.ScrollChangedEventArgs e)
+        {
+            if (e.OriginalSource is not ScrollViewer scrollViewer)
+                return;
+
+            if (scrollViewer.VerticalOffset >= scrollViewer.ExtentHeight / 2)
+            {
+                ViewModel.GetNextAudiosCommand.ExecuteAsync(null);
+            }
         }
     }
 }
