@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using VkAudio.WPF.Settings;
 using VkAudio.WPF.Views.Helpers;
@@ -120,9 +122,13 @@ namespace VkAudio.WPF.ViewModels
             }
         }
 
+        private Dictionary<double, double> _filesProgress = new();
+
         public void Report(ProgressInfo value)
         {
-            FfmpegDownloadPercent = (double)value.DownloadedBytes / (double)value.TotalBytes * 100;
+            _filesProgress[value.TotalBytes] = value.DownloadedBytes;
+            var newPercent = _filesProgress.Values.Sum() / _filesProgress.Keys.Sum() * 100;
+            FfmpegDownloadPercent = newPercent;
         }
     }
 }
