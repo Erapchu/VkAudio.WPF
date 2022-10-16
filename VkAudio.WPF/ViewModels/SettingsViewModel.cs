@@ -1,27 +1,39 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MaterialDesignThemes.Wpf;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Threading.Tasks;
 using VkAudio.WPF.Settings;
 using VkAudio.WPF.Views.Helpers;
 using Xabe.FFmpeg;
+using Xabe.FFmpeg.Downloader;
 
 namespace VkAudio.WPF.ViewModels
 {
     [INotifyPropertyChanged]
-    internal partial class SettingsViewModel
+    internal partial class SettingsViewModel : IProgress<ProgressInfo>
     {
         private readonly AppSettingsService _appSettingsService;
-
+        private readonly ILogger<SettingsViewModel> _logger;
         [ObservableProperty]
         private string _defaultSavePath;
 
         [ObservableProperty]
         private string _ffmpegPath;
 
-        public SettingsViewModel(AppSettingsService appSettingsService)
+        [ObservableProperty]
+        private bool _ffmpegDownloading;
+
+        [ObservableProperty]
+        private double _ffmpegDownloadPercent;
+
+        public SettingsViewModel(
+            AppSettingsService appSettingsService,
+            ILogger<SettingsViewModel> logger)
         {
             _appSettingsService = appSettingsService;
+            _logger = logger;
             _defaultSavePath = _appSettingsService.DefaultSavePath;
             _ffmpegPath = _appSettingsService.FFmpegPath;
         }
@@ -78,6 +90,39 @@ namespace VkAudio.WPF.ViewModels
                 var selectedPath = dialog.SelectedPath;
                 DefaultSavePath = selectedPath;
             }
+        }
+
+        [RelayCommand]
+        private async Task DownloadFFmpeg()
+        {
+            var dialog = new Ookii.Dialogs.Wpf.VistaFolderBrowserDialog();
+            dialog.UseDescriptionForTitle = true;
+            dialog.Description = "Download FFmpeg to";
+            var dialogResult = dialog.ShowDialog();
+            if (dialogResult == true)
+            {
+                var selectedPath = dialog.SelectedPath;
+                FfmpegPath = selectedPath;
+                FfmpegDownloading = true;
+                try
+                {
+                    await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, selectedPath, this);
+                    FFmpeg.SetExecutablesPath(selectedPath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, null);
+                }
+                finally
+                {
+                    FfmpegDownloading = false;
+                }
+            }
+        }
+
+        public void Report(ProgressInfo value)
+        {
+            FfmpegDownloadPercent = (double)value.DownloadedBytes / (double)value.TotalBytes * 100;
         }
     }
 }

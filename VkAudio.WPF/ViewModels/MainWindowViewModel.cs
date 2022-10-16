@@ -237,8 +237,6 @@ namespace VkAudio.WPF.ViewModels
                     MaterialMessageBoxButtons.OK,
                     DialogIdentifiers.MainWindowName,
                     PackIconKind.Error);
-                //await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, selectedPath);
-                //FFmpeg.SetExecutablesPath(selectedPath);
             }
         }
 

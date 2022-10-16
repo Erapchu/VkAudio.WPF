@@ -30,39 +30,58 @@
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="auto" />
-            </Grid.ColumnDefinitions>
-            <TextBox
-                Margin="0 0 0 8"
-                md:HintAssist.Hint="FFmpeg folder path"
-                md:TextFieldAssist.HasClearButton="True"
-                Style="{StaticResource MaterialDesignFilledTextBox}"
-                Text="{Binding FfmpegPath, UpdateSourceTrigger=PropertyChanged}" />
-            <Button
-                Grid.Column="1"
-                Margin="8 0 8 8"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Center"
-                Command="{Binding SetFFmpegPathCommand}"
-                Content="{md:PackIcon Kind=Folder}"
-                Style="{StaticResource MaterialDesignFlatAccentButton}" />
-            <TextBox
-                Grid.Row="1"
-                md:HintAssist.Hint="Default save folder path"
-                md:TextFieldAssist.HasClearButton="True"
-                Style="{StaticResource MaterialDesignFilledTextBox}"
-                Text="{Binding DefaultSavePath, UpdateSourceTrigger=PropertyChanged}" />
-            <Button
-                Grid.Row="1"
-                Grid.Column="1"
-                Margin="8 0 8 0"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Center"
-                Command="{Binding SetDefaultSavePathCommand}"
-                Content="{md:PackIcon Kind=Folder}"
-                Style="{StaticResource MaterialDesignFlatAccentButton}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox
+                    Margin="0 0 0 8"
+                    md:HintAssist.Hint="FFmpeg folder path"
+                    md:TextFieldAssist.HasClearButton="True"
+                    Style="{StaticResource MaterialDesignFilledTextBox}"
+                    Text="{Binding FfmpegPath, UpdateSourceTrigger=PropertyChanged}" />
+                <StackPanel
+                    Grid.Column="1"
+                    Margin="8 0 8 8"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <Button
+                        Margin="0 0 8 0"
+                        Padding="6"
+                        Command="{Binding SetFFmpegPathCommand}"
+                        Content="{md:PackIcon Kind=Folder, Size=20}"
+                        Style="{StaticResource MaterialDesignFlatAccentButton}" />
+                    <Button
+                        Padding="6"
+                        md:ButtonProgressAssist.IsIndicatorVisible="{Binding FfmpegDownloading}"
+                        md:ButtonProgressAssist.Value="{Binding FfmpegDownloadPercent}"
+                        Command="{Binding DownloadFFmpegCommand}"
+                        Content="{md:PackIcon Kind=Download, Size=20}"
+                        Style="{StaticResource MaterialDesignFlatAccentButton}" />
+                </StackPanel>
+            </Grid>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox
+                    md:HintAssist.Hint="Default save folder path"
+                    md:TextFieldAssist.HasClearButton="True"
+                    Style="{StaticResource MaterialDesignFilledTextBox}"
+                    Text="{Binding DefaultSavePath, UpdateSourceTrigger=PropertyChanged}" />
+                <Button
+                    Grid.Column="1"
+                    Margin="8 0 8 0"
+                    Padding="6"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Command="{Binding SetDefaultSavePathCommand}"
+                    Content="{md:PackIcon Kind=Folder, Size=20}"
+                    Style="{StaticResource MaterialDesignFlatAccentButton}" />
+            </Grid>
         </Grid>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
