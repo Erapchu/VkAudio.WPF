@@ -38,38 +38,7 @@
                 FalseValue="Visible"
                 TrueValue="Collapsed" />
             <DataTemplate x:Key="AudioDataTemplate" DataType="{x:Type vm:AudioViewModel}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="auto" />
-                    </Grid.ColumnDefinitions>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="auto" />
-                            <ColumnDefinition Width="auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel>
-                            <TextBlock Text="{Binding Title}" />
-                            <TextBlock Opacity="0.5" Text="{Binding Artist}" />
-                        </StackPanel>
-                    </Grid>
-                    <Button
-                        Grid.Column="2"
-                        Margin="0 0 10 0"
-                        md:ButtonProgressAssist.IsIndicatorVisible="{Binding IsDownloading}"
-                        md:ButtonProgressAssist.Value="{Binding Percent}"
-                        Command="{Binding DownloadAudioCommand}"
-                        CommandParameter="{Binding}"
-                        Style="{StaticResource MaterialDesignFlatButton}">
-                        <md:PackIcon
-                            Width="20"
-                            Height="20"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Kind="Download" />
-                    </Button>
-                </Grid>
+                <local:AudioView/>
             </DataTemplate>
         </ResourceDictionary>
     </controls:MaterialWindow.Resources>
