@@ -38,7 +38,7 @@
                 FalseValue="Visible"
                 TrueValue="Collapsed" />
             <DataTemplate x:Key="AudioDataTemplate" DataType="{x:Type vm:AudioViewModel}">
-                <local:AudioView/>
+                <local:AudioView />
             </DataTemplate>
         </ResourceDictionary>
     </controls:MaterialWindow.Resources>
