@@ -38,7 +38,39 @@
                 FalseValue="Visible"
                 TrueValue="Collapsed" />
             <DataTemplate x:Key="AudioDataTemplate" DataType="{x:Type vm:AudioViewModel}">
-                <local:AudioView />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Opacity="0.5"
+                            Text="{Binding Artist}"
+                            TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                    <Button
+                        Grid.Column="1"
+                        Margin="0 0 10 0"
+                        md:ButtonProgressAssist.IsIndicatorVisible="{Binding IsDownloading}"
+                        md:ButtonProgressAssist.Value="{Binding Percent}"
+                        Command="{Binding DownloadAudioCommand}"
+                        CommandParameter="{Binding}"
+                        Style="{StaticResource MaterialDesignFlatButton}">
+                        <md:PackIcon
+                            Width="20"
+                            Height="20"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Kind="Download" />
+                    </Button>
+                </Grid>
             </DataTemplate>
         </ResourceDictionary>
     </controls:MaterialWindow.Resources>
@@ -103,20 +135,12 @@
                     Visibility="{Binding IsAuthorized, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
             </Grid>
             <Grid Grid.Row="1">
-                <ListView
+                <ListBox
                     HorizontalContentAlignment="Stretch"
                     md:ListBoxItemAssist.ShowSelection="False"
                     ItemTemplate="{StaticResource AudioDataTemplate}"
-                    ItemsSource="{Binding AudioViewModels}" />
-                <!--  This is the hidden helper Grid which does the resizing  -->
-                <Grid Visibility="Hidden">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="{Binding ElementName=col2, Path=ActualWidth}" />
-                        <ColumnDefinition Width="100" />
-                    </Grid.ColumnDefinitions>
-                    <Grid x:Name="HelperField" Grid.Column="0" />
-                </Grid>
+                    ItemsSource="{Binding AudioViewModels}"
+                    ScrollViewer.ScrollChanged="ListView_ScrollChanged" />
             </Grid>
         </Grid>
     </md:DialogHost>
