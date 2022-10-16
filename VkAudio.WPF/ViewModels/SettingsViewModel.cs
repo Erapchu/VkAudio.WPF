@@ -18,6 +18,8 @@ namespace VkAudio.WPF.ViewModels
     {
         private readonly AppSettingsService _appSettingsService;
         private readonly ILogger<SettingsViewModel> _logger;
+        private readonly Dictionary<double, double> _filesProgress = new();
+
         [ObservableProperty]
         private string _defaultSavePath;
 
@@ -121,8 +123,6 @@ namespace VkAudio.WPF.ViewModels
                 }
             }
         }
-
-        private Dictionary<double, double> _filesProgress = new();
 
         public void Report(ProgressInfo value)
         {
