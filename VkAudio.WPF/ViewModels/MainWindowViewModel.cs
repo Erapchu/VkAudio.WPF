@@ -92,6 +92,8 @@ namespace VkAudio.WPF.ViewModels
                     _appSettingsService.UserId = _vkApi.UserId.GetValueOrDefault();
                     _appSettingsService.Token = _vkApi.Token;
                     await _appSettingsService.Save();
+                    _ = RefreshAudioCommand.ExecuteAsync(null);
+                    _ = FillUserInfo();
                 }
             }
             catch (Exception ex)
@@ -134,14 +136,7 @@ namespace VkAudio.WPF.ViewModels
                     await _vkApi.AuthorizeAsync(apiAuthParams);
 
                     _ = RefreshAudioCommand.ExecuteAsync(null);
-
-                    var userInfo = await _vkApi.Users.GetAsync(new[] { _appSettingsService.UserId }, ProfileFields.Photo100 | ProfileFields.FirstName | ProfileFields.LastName);
-                    if (userInfo is not null && userInfo.Count != 0)
-                    {
-                        var currentUser = userInfo[0];
-                        Photo100 = currentUser.Photo100;
-                        UserName = currentUser.FirstName + " " + currentUser.LastName;
-                    }
+                    _ = FillUserInfo();
                 }
 
                 var ffmpegPath = _appSettingsService.FFmpegPath;
@@ -151,6 +146,17 @@ namespace VkAudio.WPF.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, string.Empty);
+            }
+        }
+
+        private async Task FillUserInfo()
+        {
+            var userInfo = await _vkApi.Users.GetAsync(new[] { _appSettingsService.UserId }, ProfileFields.Photo100 | ProfileFields.FirstName | ProfileFields.LastName);
+            if (userInfo is not null && userInfo.Count != 0)
+            {
+                var currentUser = userInfo[0];
+                Photo100 = currentUser.Photo100;
+                UserName = currentUser.FirstName + " " + currentUser.LastName;
             }
         }
 
