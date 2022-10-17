@@ -42,6 +42,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="auto" />
                     </Grid.ColumnDefinitions>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -55,8 +56,14 @@
                             Text="{Binding Artist}"
                             TextTrimming="CharacterEllipsis" />
                     </Grid>
-                    <Button
+                    <TextBlock
                         Grid.Column="1"
+                        Margin="0 0 8 0"
+                        VerticalAlignment="Center"
+                        Opacity="0.5"
+                        Text="{Binding Duration}" />
+                    <Button
+                        Grid.Column="2"
                         Margin="0 0 10 0"
                         md:ButtonProgressAssist.IsIndicatorVisible="{Binding IsDownloading}"
                         md:ButtonProgressAssist.Value="{Binding Percent}"
@@ -116,6 +123,12 @@
                         <Button Command="{Binding LogoutCommand}" Content="Logout" />
                     </md:PopupBox>
                 </StackPanel>
+                <Button
+                    Margin="0 0 8 0"
+                    Command="{Binding LoginCommand}"
+                    Content="{md:PackIcon Kind=Account}"
+                    Style="{StaticResource MaterialDesignPaperButton}"
+                    Visibility="{Binding IsAuthorized, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                     <Button
                         Margin="0 0 8 0"
@@ -125,14 +138,9 @@
                     <Button
                         Command="{Binding RefreshAudioCommand}"
                         Content="{md:PackIcon Kind=Refresh}"
-                        Style="{StaticResource MaterialDesignIconForegroundButton}" />
+                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                        Visibility="{Binding IsAuthorized, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 </StackPanel>
-                <Button
-                    Grid.Column="1"
-                    Command="{Binding LoginCommand}"
-                    Content="{md:PackIcon Kind=Account}"
-                    Style="{StaticResource MaterialDesignPaperButton}"
-                    Visibility="{Binding IsAuthorized, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
             </Grid>
             <Grid Grid.Row="1">
                 <ListBox
@@ -140,7 +148,20 @@
                     md:ListBoxItemAssist.ShowSelection="False"
                     ItemTemplate="{StaticResource AudioDataTemplate}"
                     ItemsSource="{Binding AudioViewModels}"
-                    ScrollViewer.ScrollChanged="ListView_ScrollChanged" />
+                    ScrollViewer.ScrollChanged="ListView_ScrollChanged"
+                    VirtualizingPanel.IsVirtualizing="True"
+                    VirtualizingPanel.VirtualizationMode="Recycling" />
+                <StackPanel
+                    Margin="0 0 0 8"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    Visibility="{Binding DownloadingNext, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ProgressBar
+                        Margin="0 0 0 8"
+                        IsIndeterminate="True"
+                        Style="{StaticResource MaterialDesignCircularProgressBar}" />
+                    <TextBlock Text="Loading..." />
+                </StackPanel>
             </Grid>
         </Grid>
     </md:DialogHost>

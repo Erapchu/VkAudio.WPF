@@ -30,7 +30,7 @@ namespace VkAudio.WPF.Views
             if (e.OriginalSource is not ScrollViewer scrollViewer)
                 return;
 
-            if (scrollViewer.VerticalOffset >= scrollViewer.ExtentHeight / 2)
+            if (scrollViewer.VerticalOffset + scrollViewer.ViewportHeight >= scrollViewer.ExtentHeight)
             {
                 ViewModel.GetNextAudiosCommand.ExecuteAsync(null);
             }

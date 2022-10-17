@@ -176,6 +176,7 @@ namespace VkAudio.WPF.ViewModels
                         Title = audio.title,
                         Url = audio.url,
                         Artist = audio.artist,
+                        Duration = TimeSpan.FromSeconds(audio.duration),
                     });
                 }
 
@@ -201,7 +202,10 @@ namespace VkAudio.WPF.ViewModels
         {
             try
             {
-                if (DownloadingNext || !_audioRefreshed)
+                if (DownloadingNext
+                    || !_audioRefreshed
+                    || string.IsNullOrWhiteSpace(_nextFrom)
+                    || string.IsNullOrWhiteSpace(_blockId))
                     return;
 
                 DownloadingNext = true;
@@ -225,6 +229,7 @@ namespace VkAudio.WPF.ViewModels
                         Title = audio.title,
                         Url = audio.url,
                         Artist = audio.artist,
+                        Duration = TimeSpan.FromSeconds(audio.duration),
                     });
                 }
             }

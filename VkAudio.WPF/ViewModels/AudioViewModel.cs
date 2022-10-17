@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using System;
 using VkAudio.WPF.ViewModels.Messages;
 
 namespace VkAudio.WPF.ViewModels
@@ -16,6 +17,9 @@ namespace VkAudio.WPF.ViewModels
 
         [ObservableProperty]
         private string _artist;
+
+        [ObservableProperty]
+        private TimeSpan _duration;
 
         [ObservableProperty]
         private bool _isDownloading;
