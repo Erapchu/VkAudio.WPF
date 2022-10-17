@@ -27,6 +27,9 @@ namespace VkAudio.WPF.ViewModels
         [ObservableProperty]
         private int _percent;
 
+        [ObservableProperty]
+        private bool _isIndeterminate;
+
         [RelayCommand]
         private void DownloadAudio()
         {
@@ -34,6 +37,11 @@ namespace VkAudio.WPF.ViewModels
                 return;
 
             StrongReferenceMessenger.Default.Send(new DownloadAudioMessage(this));
+        }
+
+        public override string ToString()
+        {
+            return $"{_artist} - {_title}";
         }
     }
 }

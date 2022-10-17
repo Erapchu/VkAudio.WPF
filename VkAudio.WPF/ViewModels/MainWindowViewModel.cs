@@ -280,10 +280,15 @@ namespace VkAudio.WPF.ViewModels
                 conversion.OnProgress += (sender, args) =>
                 {
                     if (args.Percent <= 100)
+                    {
+                        audioViewModel.IsIndeterminate = false;
                         audioViewModel.Percent = args.Percent;
+                    }
                 };
                 audioViewModel.IsDownloading = true;
+                audioViewModel.IsIndeterminate = true;
                 audioViewModel.Percent = 0;
+                _logger.LogInformation($"Downloading {audioViewModel}");
                 await conversion.Start(parameters);
             }
             catch (FFmpegNotFoundException ffnfe)
