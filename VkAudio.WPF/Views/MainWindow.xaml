@@ -144,7 +144,19 @@
                 </StackPanel>
             </Grid>
             <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBox
+                    Margin="8"
+                    md:HintAssist.Hint="Search"
+                    md:HintAssist.IsFloating="True"
+                    md:TextFieldAssist.HasClearButton="True"
+                    Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                    Style="{StaticResource MaterialDesignOutlinedTextBox}" />
                 <ListBox
+                    Grid.Row="1"
                     HorizontalContentAlignment="Stretch"
                     md:ListBoxItemAssist.ShowSelection="False"
                     ItemTemplate="{StaticResource AudioDataTemplate}"
@@ -153,6 +165,7 @@
                     VirtualizingPanel.IsVirtualizing="True"
                     VirtualizingPanel.VirtualizationMode="Recycling" />
                 <StackPanel
+                    Grid.Row="1"
                     Margin="0 0 0 8"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Bottom"

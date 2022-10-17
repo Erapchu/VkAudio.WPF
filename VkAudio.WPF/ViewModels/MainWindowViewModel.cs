@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
 using VkAudio.WPF.Collections;
@@ -20,6 +19,7 @@ using VkAudio.WPF.Views.Helpers;
 using VkNet.Abstractions;
 using VkNet.Enums.Filters;
 using VkNet.Model;
+using VkNet.Utils;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Exceptions;
 
@@ -49,6 +49,17 @@ namespace VkAudio.WPF.ViewModels
         [ObservableProperty]
         private bool _downloadingNext;
 
+        private string _searchText;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                SetProperty(ref _searchText, value);
+                _ = Search();
+            }
+        }
+
         public ObservableCollectionDelayed<AudioViewModel> AudioViewModels { get; set; } = new ObservableCollectionDelayed<AudioViewModel>();
 
         private MainWindowViewModel()
@@ -65,6 +76,24 @@ namespace VkAudio.WPF.ViewModels
             _logger = logger;
             _appSettingsService = appSettingsService;
             _serviceProvider = serviceProvider;
+        }
+
+        private async Task Search()
+        {
+            try
+            {
+                var parameters = new VkParameters
+                {
+                    { "v", "5.131" },
+                    { "query", _searchText },
+                    { "need_blocks", 1 },
+                };
+                var response = await _vkApi.CallAsync("catalog.getAudioSearch", parameters);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, null);
+            }
         }
 
         [RelayCommand]
