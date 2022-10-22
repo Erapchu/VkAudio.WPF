@@ -302,7 +302,7 @@ namespace VkAudio.WPF.ViewModels
                     return;
 
                 var savePath = Path.Combine(saveFolder, $"{audioViewModel.Artist} - {audioViewModel.Title}.mp3");
-                var parameters = $"-n -protocol_whitelist file,http,https,tcp,tls,crypto -i \"{audioViewModel.Url}\" \"{savePath}\"";
+                var parameters = $"-n -http_persistent false -protocol_whitelist file,http,https,tcp,tls,crypto -i \"{audioViewModel.Url}\" \"{savePath}\"";
                 var conversion = FFmpeg.Conversions
                     .New()
                     .UseMultiThread(Environment.ProcessorCount);
