@@ -7,11 +7,11 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using VkAudio.WPF.Collections;
 using VkAudio.WPF.Models.Catalog.GetAudio;
 using VkAudio.WPF.Models.Catalog.GetSection;
+using VkAudio.WPF.Services;
 using VkAudio.WPF.Settings;
 using VkAudio.WPF.ViewModels.Messages;
 using VkAudio.WPF.Views;
@@ -20,8 +20,6 @@ using VkNet.Abstractions;
 using VkNet.Enums.Filters;
 using VkNet.Model;
 using VkNet.Utils;
-using Xabe.FFmpeg;
-using Xabe.FFmpeg.Exceptions;
 
 namespace VkAudio.WPF.ViewModels
 {
@@ -167,10 +165,6 @@ namespace VkAudio.WPF.ViewModels
                     _ = RefreshAudioCommand.ExecuteAsync(null);
                     _ = FillUserInfo();
                 }
-
-                var ffmpegPath = _appSettingsService.FFmpegPath;
-                if (!string.IsNullOrWhiteSpace(ffmpegPath))
-                    FFmpeg.SetExecutablesPath(ffmpegPath);
             }
             catch (Exception ex)
             {
@@ -301,29 +295,12 @@ namespace VkAudio.WPF.ViewModels
                 if (string.IsNullOrWhiteSpace(saveFolder))
                     return;
 
-                var savePath = Path.Combine(saveFolder, $"{audioViewModel.Artist} - {audioViewModel.Title}.mp3");
-                var parameters = $"-n -http_persistent false -protocol_whitelist file,http,https,tcp,tls,crypto -i \"{audioViewModel.Url}\" \"{savePath}\"";
-                var conversion = FFmpeg.Conversions
-                    .New()
-                    .UseMultiThread(Environment.ProcessorCount);
-                conversion.OnProgress += (sender, args) =>
+                // Don't allow UI thread go deep than need
+                await Task.Run(() =>
                 {
-                    if (args.Percent <= 100)
-                    {
-                        audioViewModel.IsIndeterminate = false;
-                        audioViewModel.Percent = args.Percent;
-                    }
-                };
-                audioViewModel.IsDownloading = true;
-                audioViewModel.IsIndeterminate = true;
-                audioViewModel.Percent = 0;
-                _logger.LogInformation($"Downloading {audioViewModel}");
-                await conversion.Start(parameters);
-            }
-            catch (FFmpegNotFoundException ffnfe)
-            {
-                _logger.LogError(ffnfe, null);
-                ffmpegNotFound = true;
+                    var audioDownloadService = _serviceProvider.GetService<IAudioService>();
+                    audioDownloadService.Download(audioViewModel.Url);
+                });
             }
             catch (Exception ex)
             {

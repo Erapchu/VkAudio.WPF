@@ -5,6 +5,7 @@ using NLog.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Windows;
+using VkAudio.WPF.Services;
 using VkAudio.WPF.Settings;
 using VkAudio.WPF.ViewModels;
 using VkAudio.WPF.Views;
@@ -71,6 +72,10 @@ namespace VkAudio.WPF
             // VK
             services.AddAudioBypass();
             services.AddSingleton<IVkApi, VkApi>(sp => new VkApi(services));
+
+            // Common services
+            services.AddTransient<IAudioService, AudioService>();
+            services.AddTransient<IM3U8ToMP3Service, M3U8ToMP3Service>();
 
             return services.BuildServiceProvider();
         }
