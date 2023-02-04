@@ -90,5 +90,42 @@ namespace VkAudio.WPF.Helpers
 
             return plaintext;
         }
+
+        public static Stream DecryptStream(Stream cipherStream, byte[] key, byte[] IV)
+        {
+            if (cipherStream == null || cipherStream.Length <= 0)
+                throw new ArgumentNullException(nameof(cipherStream));
+            if (key == null || key.Length <= 0)
+                throw new ArgumentNullException(nameof(key));
+            if (IV == null || IV.Length <= 0)
+                throw new ArgumentNullException(nameof(IV));
+
+            Stream decryptedStream = new MemoryStream();
+
+            try
+            {
+                // Create an Aes object
+                // with the specified key and IV.
+                using (Aes aesAlg = Aes.Create())
+                {
+                    aesAlg.Key = key;
+                    aesAlg.IV = IV;
+
+                    // Create a decryptor to perform the stream transform.
+                    using (var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV))
+                    {
+                        // Create the streams used for decryption.
+                        using var csDecrypt = new CryptoStream(cipherStream, decryptor, CryptoStreamMode.Read);
+                        csDecrypt.CopyTo(decryptedStream);
+                    }
+                }
+
+                return decryptedStream;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
     }
 }
