@@ -123,18 +123,10 @@ namespace VkAudio.WPF.Services
                             if (publicKey != null)
                             {
                                 var encryptedStream = response.Content.ReadAsStream(cts);
-                                var stringKey = s.Value.ToString();
-                                while (stringKey.Length != 64)
-                                {
-                                    stringKey += "0";
-                                }
-                                var keyBytes = System.Convert.FromHexString(stringKey);
+                                var latestByte = System.Convert.ToByte(s.Value);
+                                var ivBytes = new byte[16] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, latestByte };
                                 var publicKeyCopy = publicKey;
-                                while (publicKeyCopy.Length != 32)
-                                {
-                                    publicKeyCopy += "0";
-                                }
-                                var ivBytes = System.Convert.FromHexString(publicKeyCopy);
+                                var keyBytes = Encoding.ASCII.GetBytes(publicKeyCopy);
                                 var decryptedStream = AesCryptographyHelper.DecryptStream(encryptedStream, keyBytes, ivBytes);
                                 streams.TryAdd(s.Key, decryptedStream);
                             }
