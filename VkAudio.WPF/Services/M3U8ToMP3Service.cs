@@ -100,14 +100,20 @@ namespace VkAudio.WPF.Services
                 extXKeyIndex = m3u8Content.IndexOf(EXT_X_KEY, extXKeyIndex + 1); // Following batch
 
                 // .ts
-                var batchInfo = m3u8Content.Substring(previousExtXKeyIndex, extXKeyIndex - previousExtXKeyIndex);
+                string batchInfo = string.Empty;
+                if (extXKeyIndex < 0)
+                    batchInfo = m3u8Content.Substring(previousExtXKeyIndex);
+                else
+                    batchInfo = m3u8Content.Substring(previousExtXKeyIndex, extXKeyIndex - previousExtXKeyIndex);
+
                 var extInfIndex = batchInfo.IndexOf(EXTINF);
                 var segments = new Dictionary<string, int>();
 
                 while (extInfIndex != -1)
                 {
                     var segStartIndex = batchInfo.IndexOf('\n', extInfIndex);
-                    var segName = batchInfo[segStartIndex..].Trim();
+                    var segEndIndex = batchInfo.IndexOf('\n', segStartIndex + 1);
+                    var segName = batchInfo[segStartIndex..segEndIndex].Trim();
                     segments.TryAdd(segName, extXMediaSequence++);
                     extInfIndex = batchInfo.IndexOf(EXTINF, extInfIndex + 1); // Following segment in batch
                 }
