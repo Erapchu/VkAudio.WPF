@@ -74,8 +74,7 @@ namespace VkAudio.WPF
             services.AddSingleton<IVkApi, VkApi>(sp => new VkApi(services));
 
             // Common services
-            services.AddTransient<IAudioService, AudioService>();
-            services.AddTransient<IM3U8ToMP3Service, M3U8ToMP3Service>();
+            services.AddTransient<IAudioDownloaderService, AudioDownloaderService>();
 
             return services.BuildServiceProvider();
         }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -10,12 +9,12 @@ using VkAudio.WPF.Helpers;
 
 namespace VkAudio.WPF.Services
 {
-    public interface IM3U8ToMP3Service
+    public interface IAudioDownloaderService
     {
-        Task<Stream> Convert(string m3u8Content, CancellationToken cancellationToken);
+        Task DownloadMP3(string m3u8Url, CancellationToken cancellationToken = default);
     }
 
-    internal class M3U8ToMP3Service : IM3U8ToMP3Service
+    internal class AudioDownloaderService : IAudioDownloaderService
     {
         public const string EXT_X_KEY = "#EXT-X-KEY:";
         public const string EXT_X_MEDIA_SEQUENCE = "#EXT-X-MEDIA-SEQUENCE:";
@@ -27,12 +26,26 @@ namespace VkAudio.WPF.Services
 
         private readonly IHttpClientFactory _httpClientFactory;
 
-        public M3U8ToMP3Service(IHttpClientFactory httpClientFactory)
+        public AudioDownloaderService(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<Stream> Convert(string m3u8Content, CancellationToken cancellationToken)
+        public async Task DownloadMP3(string m3u8Url, CancellationToken cancellationToken)
+        {
+            var content = await DownloadM3U8Content(m3u8Url, cancellationToken);
+            var mp3Stream = await ConvertToMP3(content, cancellationToken);
+        }
+
+        private async Task<string> DownloadM3U8Content(string m3u8Url, CancellationToken cancellationToken)
+        {
+            var client = _httpClientFactory.CreateClient();
+            var request = new HttpRequestMessage(HttpMethod.Get, m3u8Url);
+            using var response = await client.SendAsync(request, cancellationToken);
+            return await response.Content.ReadAsStringAsync(cancellationToken);
+        }
+
+        public async Task<Stream> ConvertToMP3(string m3u8Content, CancellationToken cancellationToken)
         {
             int extXKeyIndex = m3u8Content.IndexOf(EXT_X_KEY);
 

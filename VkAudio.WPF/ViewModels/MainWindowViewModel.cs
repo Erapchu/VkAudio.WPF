@@ -30,7 +30,7 @@ namespace VkAudio.WPF.ViewModels
         private readonly ILogger<MainWindowViewModel> _logger;
         private readonly AppSettingsService _appSettingsService;
         private readonly IServiceProvider _serviceProvider;
-
+        private readonly IAudioDownloaderService _audioDownloaderService;
         private bool _audioRefreshed;
         private string _nextFrom;
         private string _blockId;
@@ -68,12 +68,14 @@ namespace VkAudio.WPF.ViewModels
             IVkApi vkApi,
             ILogger<MainWindowViewModel> logger,
             AppSettingsService appSettingsService,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            IAudioDownloaderService audioDownloaderService)
         {
             _vkApi = vkApi;
             _logger = logger;
             _appSettingsService = appSettingsService;
             _serviceProvider = serviceProvider;
+            _audioDownloaderService = audioDownloaderService;
         }
 
         private async Task Search()
@@ -296,11 +298,7 @@ namespace VkAudio.WPF.ViewModels
                     return;
 
                 // Don't allow UI thread go deep than need
-                await Task.Run(() =>
-                {
-                    var audioDownloadService = _serviceProvider.GetService<IAudioService>();
-                    audioDownloadService.Download(audioViewModel.Url);
-                });
+                await Task.Run(() => _audioDownloaderService.DownloadMP3(audioViewModel.Url));
             }
             catch (Exception ex)
             {
