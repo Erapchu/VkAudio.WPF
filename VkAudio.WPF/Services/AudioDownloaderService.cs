@@ -25,6 +25,8 @@ namespace VkAudio.WPF.Services
         public const string URI = "URI=";
 
         private readonly IHttpClientFactory _httpClientFactory;
+        private string _parentUrl;
+        private int _extXMediaSequence = 1;
 
         public AudioDownloaderService(IHttpClientFactory httpClientFactory)
         {
@@ -33,8 +35,33 @@ namespace VkAudio.WPF.Services
 
         public async Task DownloadMP3(string m3u8Url, CancellationToken cancellationToken)
         {
+            ParseParentUrl(m3u8Url);
             var content = await DownloadM3U8Content(m3u8Url, cancellationToken);
+            ParseMediaSequience(content);
             var mp3Stream = await ConvertToMP3(content, cancellationToken);
+        }
+
+        private void ParseParentUrl(string m3u8Url)
+        {
+            var lastSegmentIndex = m3u8Url.LastIndexOf('/');
+            _parentUrl = m3u8Url[..lastSegmentIndex];
+        }
+
+        private void ParseMediaSequience(string m3u8Content)
+        {
+            // Determine media sequence
+            var extXMediaSequenceIndexStart = m3u8Content.IndexOf(EXT_X_MEDIA_SEQUENCE);
+            if (extXMediaSequenceIndexStart != -1)
+            {
+                var extXMediaSequenceIndexEnd = m3u8Content.IndexOf('\n', extXMediaSequenceIndexStart);
+                if (extXMediaSequenceIndexEnd != -1)
+                {
+                    var s = m3u8Content.Substring(
+                        extXMediaSequenceIndexStart + EXT_X_MEDIA_SEQUENCE.Length,
+                        extXMediaSequenceIndexEnd - extXMediaSequenceIndexStart - EXT_X_MEDIA_SEQUENCE.Length);
+                    int.TryParse(s, out _extXMediaSequence);
+                }
+            }
         }
 
         private async Task<string> DownloadM3U8Content(string m3u8Url, CancellationToken cancellationToken)
@@ -47,25 +74,8 @@ namespace VkAudio.WPF.Services
 
         public async Task<Stream> ConvertToMP3(string m3u8Content, CancellationToken cancellationToken)
         {
-            int extXKeyIndex = m3u8Content.IndexOf(EXT_X_KEY);
-
-            // Determine media sequence
-            var extXMediaSequence = 1; // By default
-            var extXMediaSequenceIndexStart = m3u8Content.IndexOf(EXT_X_MEDIA_SEQUENCE);
-            if (extXMediaSequenceIndexStart != -1)
-            {
-                var extXMediaSequenceIndexEnd = m3u8Content.IndexOf('\n', extXMediaSequenceIndexStart);
-                if (extXMediaSequenceIndexEnd != -1)
-                {
-                    var s = m3u8Content.Substring(
-                        extXMediaSequenceIndexStart + EXT_X_MEDIA_SEQUENCE.Length,
-                        extXMediaSequenceIndexEnd - extXMediaSequenceIndexStart - EXT_X_MEDIA_SEQUENCE.Length);
-                    int.TryParse(s, out extXMediaSequence);
-                }
-            }
-
             var streams = new ConcurrentDictionary<string, Stream>();
-            string parentUrl = null;
+            int extXKeyIndex = m3u8Content.IndexOf(EXT_X_KEY);
 
             while (extXKeyIndex != -1) // Batch started
             {
@@ -95,12 +105,6 @@ namespace VkAudio.WPF.Services
                             var sQuote = extXKeyValue.IndexOf('"', fQuote + 1);
                             var publicKeyUri = extXKeyValue[(fQuote + 1)..sQuote];
 
-                            if (parentUrl is null)
-                            {
-                                var lastSegmentIndex = publicKeyUri.LastIndexOf('/');
-                                parentUrl = publicKeyUri[..lastSegmentIndex];
-                            }
-
                             var client = _httpClientFactory.CreateClient();
                             using var request = new HttpRequestMessage(HttpMethod.Get, publicKeyUri);
                             using var response = await client.SendAsync(request, cancellationToken);
@@ -127,36 +131,35 @@ namespace VkAudio.WPF.Services
                     var segStartIndex = batchInfo.IndexOf('\n', extInfIndex);
                     var segEndIndex = batchInfo.IndexOf('\n', segStartIndex + 1);
                     var segName = batchInfo[segStartIndex..segEndIndex].Trim();
-                    segments.TryAdd(segName, extXMediaSequence++);
+                    segments.TryAdd(segName, _extXMediaSequence++);
                     extInfIndex = batchInfo.IndexOf(EXTINF, extInfIndex + 1); // Following segment in batch
                 }
 
                 await Parallel.ForEachAsync(segments, cancellationToken, async (s, cts) =>
                 {
                     var client = _httpClientFactory.CreateClient();
-                    var segmentUrl = parentUrl + '/' + s.Key;
+                    var segmentUrl = _parentUrl + '/' + s.Key;
                     using (var request = new HttpRequestMessage(HttpMethod.Get, segmentUrl))
                     {
                         using (var response = await client.SendAsync(request, cancellationToken))
                         {
+                            Stream pureStream = null;
                             if (publicKey != null)
                             {
                                 var encryptedStream = response.Content.ReadAsStream(cts);
                                 var latestByte = System.Convert.ToByte(s.Value);
                                 var ivBytes = new byte[16] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, latestByte };
-                                var publicKeyCopy = publicKey;
-                                var keyBytes = Encoding.ASCII.GetBytes(publicKeyCopy);
-                                var decryptedStream = AesCryptographyHelper.DecryptStream(encryptedStream, keyBytes, ivBytes);
-                                streams.TryAdd(s.Key, decryptedStream);
+                                var keyBytes = Encoding.ASCII.GetBytes(publicKey);
+                                pureStream = AesCryptographyHelper.DecryptStream(encryptedStream, keyBytes, ivBytes);
                             }
                             else
                             {
-                                var ms = new MemoryStream();
-                                var rms = response.Content.ReadAsStream();
-                                rms.CopyTo(ms);
-                                ms.Seek(0, SeekOrigin.Begin);
-                                streams.TryAdd(s.Key, ms);
+                                pureStream = new MemoryStream();
+                                var tempStream = response.Content.ReadAsStream();
+                                await tempStream.CopyToAsync(pureStream, cts);
                             }
+                            pureStream.Seek(0, SeekOrigin.Begin);
+                            streams.TryAdd(s.Key, pureStream);
                         }
                     }
                 });
