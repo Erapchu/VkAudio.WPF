@@ -38,15 +38,15 @@ namespace VkAudio.WPF.Services
 
             // Determine media sequence
             var extXMediaSequence = 1; // By default
-            var extXMediaSequenceIndex = m3u8Content.IndexOf(EXT_X_MEDIA_SEQUENCE);
-            if (extXMediaSequenceIndex != -1)
+            var extXMediaSequenceIndexStart = m3u8Content.IndexOf(EXT_X_MEDIA_SEQUENCE);
+            if (extXMediaSequenceIndexStart != -1)
             {
-                var extXMediaSequenceCaret = m3u8Content.IndexOf('\n', extXMediaSequenceIndex);
-                if (extXMediaSequenceCaret != -1)
+                var extXMediaSequenceIndexEnd = m3u8Content.IndexOf('\n', extXMediaSequenceIndexStart);
+                if (extXMediaSequenceIndexEnd != -1)
                 {
                     var s = m3u8Content.Substring(
-                        extXMediaSequenceIndex + EXT_X_MEDIA_SEQUENCE.Length,
-                        extXMediaSequenceCaret - extXMediaSequenceIndex - EXT_X_MEDIA_SEQUENCE.Length);
+                        extXMediaSequenceIndexStart + EXT_X_MEDIA_SEQUENCE.Length,
+                        extXMediaSequenceIndexEnd - extXMediaSequenceIndexStart - EXT_X_MEDIA_SEQUENCE.Length);
                     int.TryParse(s, out extXMediaSequence);
                 }
             }
