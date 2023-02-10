@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -117,11 +118,9 @@ namespace VkAudio.WPF.Services
                 extXKeyIndex = m3u8Content.IndexOf(EXT_X_KEY, extXKeyIndex + 1); // Following batch
 
                 // .ts
-                string batchInfo = string.Empty;
-                if (extXKeyIndex < 0)
-                    batchInfo = m3u8Content.Substring(previousExtXKeyIndex);
-                else
-                    batchInfo = m3u8Content.Substring(previousExtXKeyIndex, extXKeyIndex - previousExtXKeyIndex);
+                string batchInfo = extXKeyIndex < 0
+                    ? batchInfo = m3u8Content[previousExtXKeyIndex..]
+                    : batchInfo = m3u8Content[previousExtXKeyIndex..extXKeyIndex];
 
                 var extInfIndex = batchInfo.IndexOf(EXTINF);
                 var segments = new Dictionary<string, int>();
@@ -147,7 +146,7 @@ namespace VkAudio.WPF.Services
                             if (publicKey != null)
                             {
                                 var encryptedStream = response.Content.ReadAsStream(cts);
-                                var latestByte = System.Convert.ToByte(s.Value);
+                                var latestByte = System.Convert.ToByte(s.Value); //TODO: 255 may exceed here
                                 var ivBytes = new byte[16] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, latestByte };
                                 var keyBytes = Encoding.ASCII.GetBytes(publicKey);
                                 pureStream = AesCryptographyHelper.DecryptStream(encryptedStream, keyBytes, ivBytes);
@@ -167,7 +166,7 @@ namespace VkAudio.WPF.Services
 
             using var file = File.Open(@"C:\Users\Andre\Desktop\test.mp3", FileMode.OpenOrCreate);
             file.Seek(0, SeekOrigin.Begin);
-            foreach (var stream in streams)
+            foreach (var stream in streams.OrderBy(kvp => kvp.Key))
             {
                 stream.Value.CopyTo(file);
             }
