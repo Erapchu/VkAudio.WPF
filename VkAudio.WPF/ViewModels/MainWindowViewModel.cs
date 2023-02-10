@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using VkAudio.WPF.Collections;
 using VkAudio.WPF.Models.Catalog.GetAudio;
@@ -294,8 +295,11 @@ namespace VkAudio.WPF.ViewModels
                 if (string.IsNullOrWhiteSpace(saveFolder))
                     return;
 
+                audioViewModel.IsDownloading = true;
+                audioViewModel.IsIndeterminate = true;
+                var savePath = Path.Combine(saveFolder, $"{audioViewModel.Artist} - {audioViewModel.Title}.mp3");
                 // Don't allow UI thread go deep than need
-                await Task.Run(() => _serviceProvider.GetService<IAudioDownloaderService>().DownloadMP3(audioViewModel.Url));
+                await Task.Run(() => _serviceProvider.GetService<IAudioDownloaderService>().DownloadMP3(audioViewModel.Url, savePath));
             }
             catch (Exception ex)
             {

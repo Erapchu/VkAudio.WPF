@@ -7,12 +7,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using VkAudio.WPF.Helpers;
+using VkAudio.WPF.Models;
 
 namespace VkAudio.WPF.Services
 {
     public interface IAudioDownloaderService
     {
-        Task DownloadMP3(string m3u8Url, CancellationToken cancellationToken = default);
+        Task DownloadMP3(string m3u8Url, string savePath, CancellationToken cancellationToken = default);
     }
 
     internal class AudioDownloaderService : IAudioDownloaderService
@@ -34,12 +35,15 @@ namespace VkAudio.WPF.Services
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task DownloadMP3(string m3u8Url, CancellationToken cancellationToken)
+        public async Task DownloadMP3(string m3u8Url, string savePath, CancellationToken cancellationToken)
         {
             ParseParentUrl(m3u8Url);
             var content = await DownloadM3U8Content(m3u8Url, cancellationToken);
             ParseMediaSequience(content);
             var mp3Stream = await ConvertToMP3(content, cancellationToken);
+            using var file = File.Open(savePath, FileMode.OpenOrCreate);
+            file.Seek(0, SeekOrigin.Begin);
+            await mp3Stream.CopyToAsync(file, cancellationToken);
         }
 
         private void ParseParentUrl(string m3u8Url)
@@ -75,7 +79,7 @@ namespace VkAudio.WPF.Services
 
         public async Task<Stream> ConvertToMP3(string m3u8Content, CancellationToken cancellationToken)
         {
-            var streams = new ConcurrentDictionary<string, Stream>();
+            var readySegments = new ConcurrentBag<M3U8Segment>();
             int extXKeyIndex = m3u8Content.IndexOf(EXT_X_KEY);
 
             while (extXKeyIndex != -1) // Batch started
@@ -123,21 +127,26 @@ namespace VkAudio.WPF.Services
                     : batchInfo = m3u8Content[previousExtXKeyIndex..extXKeyIndex];
 
                 var extInfIndex = batchInfo.IndexOf(EXTINF);
-                var segments = new Dictionary<string, int>();
+                var preparedSegments = new List<M3U8Segment>();
 
                 while (extInfIndex != -1)
                 {
                     var segStartIndex = batchInfo.IndexOf('\n', extInfIndex);
                     var segEndIndex = batchInfo.IndexOf('\n', segStartIndex + 1);
                     var segName = batchInfo[segStartIndex..segEndIndex].Trim();
-                    segments.TryAdd(segName, _extXMediaSequence++);
+                    var segment = new M3U8Segment()
+                    {
+                        MediaSequence = _extXMediaSequence++,
+                        Name = segName
+                    };
+                    preparedSegments.Add(segment);
                     extInfIndex = batchInfo.IndexOf(EXTINF, extInfIndex + 1); // Following segment in batch
                 }
 
-                await Parallel.ForEachAsync(segments, cancellationToken, async (s, cts) =>
+                await Parallel.ForEachAsync(preparedSegments, cancellationToken, async (s, cts) =>
                 {
                     var client = _httpClientFactory.CreateClient();
-                    var segmentUrl = _parentUrl + '/' + s.Key;
+                    var segmentUrl = _parentUrl + '/' + s.Name;
                     using (var request = new HttpRequestMessage(HttpMethod.Get, segmentUrl))
                     {
                         using (var response = await client.SendAsync(request, cancellationToken))
@@ -146,7 +155,7 @@ namespace VkAudio.WPF.Services
                             if (publicKey != null)
                             {
                                 var encryptedStream = response.Content.ReadAsStream(cts);
-                                var latestByte = System.Convert.ToByte(s.Value); //TODO: 255 may exceed here
+                                var latestByte = System.Convert.ToByte(s.MediaSequence); //TODO: 255 may exceed here
                                 var ivBytes = new byte[16] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, latestByte };
                                 var keyBytes = Encoding.ASCII.GetBytes(publicKey);
                                 pureStream = AesCryptographyHelper.DecryptStream(encryptedStream, keyBytes, ivBytes);
@@ -158,20 +167,22 @@ namespace VkAudio.WPF.Services
                                 await tempStream.CopyToAsync(pureStream, cts);
                             }
                             pureStream.Seek(0, SeekOrigin.Begin);
-                            streams.TryAdd(s.Key, pureStream);
+                            s.Stream = pureStream;
+                            readySegments.Add(s);
                         }
                     }
                 });
             }
 
-            using var file = File.Open(@"C:\Users\Andre\Desktop\test.mp3", FileMode.OpenOrCreate);
-            file.Seek(0, SeekOrigin.Begin);
-            foreach (var stream in streams.OrderBy(kvp => kvp.Key))
+            var totalMS = new MemoryStream();
+            foreach (var segment in readySegments.OrderBy(s => s.MediaSequence))
             {
-                stream.Value.CopyTo(file);
+                await segment.Stream.CopyToAsync(totalMS, cancellationToken);
             }
 
-            return null;
+            totalMS.Seek(0, SeekOrigin.Begin);
+
+            return totalMS;
         }
     }
 }
